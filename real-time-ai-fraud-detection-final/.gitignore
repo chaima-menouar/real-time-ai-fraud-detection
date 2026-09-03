@@ -1,0 +1,46 @@
+# Secrets and local configuration
+.env
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Java / Maven
+target/
+*.jar
+
+# IDE and operating system
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Private datasets and generated predictions
+/data/
+/datasets/
+ml/data/*.csv
+ml/data/*.jsonl
+ml/data/*.parquet
+ml/data/*.zip
+!ml/data/README.md
+**/test_predictions.csv
+**/predictions.csv
+
+# Trained model weights (publish separately as a release/model artifact)
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.joblib
+*.pkl
+ml/models/**/checkpoints/
+
+# Logs and local databases
+*.log
+*.db
+*.mv.db

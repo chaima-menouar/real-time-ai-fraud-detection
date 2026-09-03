@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Human-reviewed real-time AI fraud detection demo for e-learning comments">
+    <title>FraudLens — Real-Time AI Detection</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            --background: #07111f;
+            --panel: #0d1b2d;
+            --panel-strong: #13243a;
+            --border: #263a53;
+            --text: #edf5ff;
+            --muted: #98abc3;
+            --accent: #54d6b0;
+            --accent-dark: #0d775e;
+            --risk: #ff7b7b;
+            --safe: #6ee7b7;
+            --warning: #f6c760;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background:
+                radial-gradient(circle at 85% 10%, rgba(52, 211, 153, .12), transparent 25rem),
+                var(--background);
+            color: var(--text);
+        }
+        header, main { width: min(1120px, calc(100% - 32px)); margin: auto; }
+        header { padding: 42px 0 26px; }
+        .eyebrow { color: var(--accent); text-transform: uppercase; letter-spacing: .14em; font-weight: 750; font-size: .78rem; }
+        h1 { margin: 10px 0; font-size: clamp(2rem, 5vw, 4.3rem); line-height: 1; max-width: 850px; }
+        header p { max-width: 720px; color: var(--muted); font-size: 1.05rem; line-height: 1.65; }
+        .grid { display: grid; grid-template-columns: 1.45fr .8fr; gap: 20px; padding-bottom: 48px; }
+        .panel { background: rgba(13, 27, 45, .93); border: 1px solid var(--border); border-radius: 18px; padding: 22px; box-shadow: 0 24px 60px rgba(0,0,0,.25); }
+        .panel-title { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; }
+        h2 { font-size: 1.1rem; margin: 0; }
+        .status { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: .84rem; }
+        .dot { width: 9px; height: 9px; border-radius: 99px; background: var(--warning); }
+        .dot.online { background: var(--safe); box-shadow: 0 0 0 5px rgba(110, 231, 183, .1); }
+        #comments { display: grid; gap: 12px; min-height: 300px; max-height: 520px; overflow-y: auto; padding-right: 4px; }
+        .empty { color: var(--muted); display: grid; place-items: center; min-height: 260px; text-align: center; }
+        .comment { border: 1px solid var(--border); background: var(--panel-strong); border-radius: 14px; padding: 14px; }
+        .comment.risk { border-color: rgba(255, 123, 123, .55); }
+        .comment-head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+        .author { font-weight: 700; }
+        .badge { border-radius: 999px; padding: 4px 9px; font-size: .72rem; font-weight: 750; text-transform: uppercase; letter-spacing: .04em; }
+        .badge.safe { color: var(--safe); background: rgba(110, 231, 183, .10); }
+        .badge.risk { color: var(--risk); background: rgba(255, 123, 123, .10); }
+        .content { margin: 0 0 10px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+        .meta { color: var(--muted); font-size: .76rem; }
+        form { display: grid; gap: 13px; }
+        label { font-size: .83rem; color: var(--muted); font-weight: 650; }
+        input, textarea, select {
+            width: 100%; margin-top: 6px; border-radius: 10px; border: 1px solid var(--border);
+            background: #091625; color: var(--text); padding: 11px 12px; font: inherit;
+        }
+        textarea { min-height: 132px; resize: vertical; }
+        input:focus, textarea:focus, select:focus { outline: 2px solid rgba(84,214,176,.45); border-color: var(--accent); }
+        button { border: 0; border-radius: 10px; padding: 12px 16px; background: var(--accent); color: #042219; font-weight: 800; cursor: pointer; }
+        button:disabled { opacity: .55; cursor: wait; }
+        .notice { margin-top: 18px; padding: 13px; border: 1px solid var(--border); border-radius: 12px; color: var(--muted); font-size: .83rem; line-height: 1.5; }
+        .notice strong { color: var(--text); }
+        #message { min-height: 22px; margin-top: 12px; color: var(--muted); font-size: .84rem; }
+        #message.error { color: var(--risk); }
+        @media (max-width: 780px) { .grid { grid-template-columns: 1fr; } header { padding-top: 28px; } }
+    </style>
+</head>
+<body>
+<header>
+    <div class="eyebrow">Responsible AI · Portfolio demo</div>
+    <h1>Real-time fraud signals for safer learning spaces.</h1>
+    <p>FraudLens classifies live e-learning comments with a multilingual model and streams the result to reviewers. Every signal requires human verification.</p>
+</header>
+
+<main class="grid">
+    <section class="panel" aria-labelledby="feed-title">
+        <div class="panel-title">
+            <h2 id="feed-title">Live review feed</h2>
+            <span class="status"><span id="connection-dot" class="dot"></span><span id="connection-label">Connecting</span></span>
+        </div>
+        <div id="comments" aria-live="polite"><div class="empty">Loading the active session…</div></div>
+    </section>
+
+    <aside class="panel">
+        <div class="panel-title"><h2>Classify a comment</h2></div>
+        <form id="comment-form">
+            <label>Live session
+                <select id="live" required></select>
+            </label>
+            <label>Reviewer alias
+                <input id="author" maxlength="80" value="Demo reviewer" required>
+            </label>
+            <label>Comment text
+                <textarea id="content" minlength="3" maxlength="2000" placeholder="Enter a test comment without personal information" required></textarea>
+            </label>
+            <button id="submit" type="submit">Run model classification</button>
+        </form>
+        <div id="message" role="status"></div>
+        <div class="notice"><strong>Human review required.</strong> A high score is not proof of fraud. Do not enter real personal, financial, or learner information in this demo.</div>
+    </aside>
+</main>
+
+<script>
+    const elements = {
+        live: document.querySelector('#live'),
+        comments: document.querySelector('#comments'),
+        form: document.querySelector('#comment-form'),
+        author: document.querySelector('#author'),
+        content: document.querySelector('#content'),
+        submit: document.querySelector('#submit'),
+        message: document.querySelector('#message'),
+        dot: document.querySelector('#connection-dot'),
+        connection: document.querySelector('#connection-label')
+    };
+    let socket;
+
+    async function request(url, options = {}) {
+        const response = await fetch(url, {headers: {'Content-Type': 'application/json'}, ...options});
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(body.message || body.detail || `Request failed (${response.status})`);
+        return body;
+    }
+
+    function renderComment(comment) {
+        const article = document.createElement('article');
+        article.className = `comment ${comment.risk ? 'risk' : ''}`;
+        const head = document.createElement('div'); head.className = 'comment-head';
+        const author = document.createElement('span'); author.className = 'author'; author.textContent = comment.author;
+        const badge = document.createElement('span'); badge.className = `badge ${comment.risk ? 'risk' : 'safe'}`;
+        badge.textContent = comment.risk ? 'Review' : 'Low risk';
+        head.append(author, badge);
+        const content = document.createElement('p'); content.className = 'content'; content.textContent = comment.content;
+        const meta = document.createElement('div'); meta.className = 'meta';
+        meta.textContent = `${comment.category.replaceAll('_', ' ')} · ${(comment.confidence * 100).toFixed(1)}% model score`;
+        article.append(head, content, meta);
+        return article;
+    }
+
+    function setComments(comments) {
+        elements.comments.replaceChildren();
+        if (!comments.length) {
+            const empty = document.createElement('div'); empty.className = 'empty'; empty.textContent = 'No comments classified in this session yet.';
+            elements.comments.append(empty); return;
+        }
+        comments.forEach(item => elements.comments.append(renderComment(item)));
+        elements.comments.scrollTop = elements.comments.scrollHeight;
+    }
+
+    function connectWebSocket(liveId) {
+        if (socket) socket.close();
+        const scheme = location.protocol === 'https:' ? 'wss' : 'ws';
+        socket = new WebSocket(`${scheme}://${location.host}/ws`);
+        socket.onopen = () => socket.send('CONNECT\naccept-version:1.2\nheart-beat:0,0\n\n\0');
+        socket.onmessage = event => {
+            for (const frame of event.data.split('\0')) {
+                if (frame.startsWith('CONNECTED')) {
+                    socket.send(`SUBSCRIBE\nid:comments-${liveId}\ndestination:/topic/lives/${liveId}/comments\nack:auto\n\n\0`);
+                    elements.dot.classList.add('online'); elements.connection.textContent = 'Live';
+                } else if (frame.startsWith('MESSAGE')) {
+                    const separator = frame.indexOf('\n\n');
+                    if (separator > -1) {
+                        const item = JSON.parse(frame.slice(separator + 2));
+                        if (elements.comments.querySelector('.empty')) elements.comments.replaceChildren();
+                        elements.comments.append(renderComment(item));
+                        elements.comments.scrollTop = elements.comments.scrollHeight;
+                    }
+                }
+            }
+        };
+        socket.onclose = () => { elements.dot.classList.remove('online'); elements.connection.textContent = 'Offline'; };
+        socket.onerror = () => { elements.connection.textContent = 'Unavailable'; };
+    }
+
+    async function selectLive() {
+        const liveId = elements.live.value;
+        const comments = await request(`/api/lives/${liveId}/comments`);
+        setComments(comments);
+        connectWebSocket(liveId);
+    }
+
+    async function initialize() {
+        try {
+            const lives = await request('/api/lives');
+            const active = lives.filter(item => item.status === 'ACTIVE');
+            if (!active.length) throw new Error('No active live session is available');
+            active.forEach(item => {
+                const option = document.createElement('option'); option.value = item.id; option.textContent = item.title;
+                elements.live.append(option);
+            });
+            await selectLive();
+        } catch (error) {
+            elements.message.textContent = error.message; elements.message.className = 'error';
+            elements.submit.disabled = true;
+        }
+    }
+
+    elements.live.addEventListener('change', selectLive);
+    elements.form.addEventListener('submit', async event => {
+        event.preventDefault(); elements.submit.disabled = true; elements.message.className = ''; elements.message.textContent = 'Running the model…';
+        try {
+            await request(`/api/lives/${elements.live.value}/comments`, {
+                method: 'POST', body: JSON.stringify({author: elements.author.value, content: elements.content.value})
+            });
+            elements.content.value = ''; elements.message.textContent = 'Classification completed and sent to the review feed.';
+        } catch (error) {
+            elements.message.textContent = error.message; elements.message.className = 'error';
+        } finally { elements.submit.disabled = false; }
+    });
+    initialize();
+</script>
+</body>
+</html>

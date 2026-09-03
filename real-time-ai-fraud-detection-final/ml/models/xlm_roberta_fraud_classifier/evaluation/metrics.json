@@ -1,0 +1,7 @@
+{
+  "note": "Historical aggregate metrics preserved from the academic experiment; raw prediction rows are excluded.",
+  "examples": 76605,
+  "accuracy": 0.926963,
+  "macro_f1": 0.825518,
+  "weighted_f1": 0.938208
+}

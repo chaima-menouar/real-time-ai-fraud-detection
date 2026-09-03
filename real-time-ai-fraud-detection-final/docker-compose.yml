@@ -1,0 +1,21 @@
+services:
+  ai-service:
+    build: ./ai-service
+    environment:
+      MODEL_PATH: /models/xlm_roberta_fraud_classifier
+      ALLOW_REMOTE_MODEL: "false"
+      CORS_ORIGINS: http://localhost:8080,http://127.0.0.1:8080
+    volumes:
+      - ./ml/models/xlm_roberta_fraud_classifier:/models/xlm_roberta_fraud_classifier:ro
+    ports:
+      - "8000:8000"
+
+  web-app:
+    build: ./spring-backend
+    depends_on:
+      - ai-service
+    environment:
+      AI_SERVICE_URL: http://ai-service:8000
+      APP_ALLOWED_ORIGINS: http://localhost:8080,http://127.0.0.1:8080
+    ports:
+      - "8080:8080"
