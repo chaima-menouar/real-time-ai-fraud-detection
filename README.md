@@ -1,28 +1,39 @@
+<div align="center">
+
 # Real-Time AI Fraud Detection for E-Learning
 
-An end-to-end academic prototype that classifies suspicious e-learning comments in real time. A multilingual **XLM-RoBERTa** classifier is exposed through FastAPI, consumed by a Spring Boot application, and returned to the browser through REST/WebSocket flows.
+### Multilingual risk classification connected to a real-time web application
 
-> This project is a decision-support demonstration, not a production moderation system. Predictions can be wrong and must not be used as the sole basis for sanctions or account decisions.
+**XLM-RoBERTa · FastAPI · Spring Boot · REST/WebSocket · Docker · human review**
+
+![Transformers](https://img.shields.io/badge/Model-XLM--RoBERTa-FFD21E?logo=huggingface&logoColor=0F172A)
+![FastAPI](https://img.shields.io/badge/FastAPI-Inference-009688?logo=fastapi&logoColor=white)
+![Spring](https://img.shields.io/badge/Spring%20Boot-App-6DB33F?logo=springboot&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+
+</div>
+
+An end-to-end academic prototype that classifies suspicious e-learning comments in real time. A multilingual **XLM-RoBERTa** classifier is exposed through FastAPI, consumed by a Spring Boot application and returned to the browser through REST/WebSocket flows.
+
+> Predictions are **decision-support signals**, not a production moderation verdict and never a sufficient basis for sanctions or account decisions.
 
 ## Architecture
 
-![Real-Time AI Fraud Detection architecture](docs/architecture.svg)
+![Real-Time AI Fraud Detection architecture](docs/architecture-modern.svg)
 
-The application separates the ML inference service from the web application. Spring Boot owns the application workflow and persistence, while FastAPI is responsible for validated model inference.
+The application separates the ML inference boundary from the web application: Spring Boot owns workflow and persistence; FastAPI owns validated model inference and readiness.
 
-## Engineering improvements in this release
+## Engineering highlights
 
-- separates model training, inference, and the web application;
-- keeps private training text and large model weights out of Git;
-- removes keyword fallbacks and fabricated confidence values;
-- reports model unavailability instead of silently returning a normal result;
-- preserves multiclass predictions while exposing a clear risk signal;
-- adds validation, safer logging, CORS restrictions, tests, Docker support, and documentation;
-- uses duplicate-aware dataset splitting to reduce evaluation leakage.
+- model training, inference and web application are separated;
+- private training text and large model weights stay outside Git;
+- no keyword fallback or fabricated confidence values;
+- model unavailability is reported explicitly;
+- multiclass outputs remain available while exposing a clear risk signal;
+- validation, safer logging, CORS controls, tests and Docker support;
+- duplicate-aware splitting reduces evaluation leakage risk.
 
 ## Reported experiment
-
-The following values come from the preserved aggregate evaluation report:
 
 | Metric | Value |
 |---|---:|
@@ -31,23 +42,15 @@ The following values come from the preserved aggregate evaluation report:
 | Macro F1 | 0.8255 |
 | Test examples | 76,605 |
 
-These are historical experiment results. The private dataset and trained weights are intentionally not published, so the repository does not claim that these values are automatically reproducible from the public files alone.
+These are preserved historical experiment results. The private dataset and model weights are intentionally not published, so the public repository does not claim automatic reproducibility of those exact values.
 
 ## Technology stack
 
-- Python
-- FastAPI
-- Hugging Face Transformers
-- XLM-RoBERTa
-- Spring Boot
-- WebSocket
-- H2 / SQL persistence
-- Docker / Docker Compose
-- Pytest and Maven tests
+`Python` · `FastAPI` · `Hugging Face Transformers` · `XLM-RoBERTa` · `Spring Boot` · `WebSocket` · `H2/SQL` · `Docker Compose` · `Pytest` · `Maven`
 
 ## Quick start
 
-Model artifacts must be placed under:
+Place model artifacts under:
 
 ```text
 ml/models/xlm_roberta_fraud_classifier/
@@ -59,9 +62,9 @@ Then run:
 docker compose up --build
 ```
 
-Open the Spring application at `http://localhost:8080`. The inference service exposes health/readiness endpoints on port `8000`.
+Open the Spring application at `http://localhost:8080`. The inference service exposes readiness on port `8000`.
 
-If the weights are missing, the service stays observable but prediction readiness is reported as unavailable. It does not invent an output.
+If weights are missing, readiness is reported as unavailable instead of inventing a prediction.
 
 ## Local development
 
@@ -92,7 +95,7 @@ python ml/scripts/train.py --data-dir ml/data/processed --output-dir ml/models/x
 python ml/scripts/evaluate.py --data-file ml/data/processed/test.csv --model-dir ml/models/xlm_roberta_fraud_classifier
 ```
 
-Expected source columns are `text` and `label`. Raw comments and checkpoints must remain outside the public repository.
+Expected source columns: `text`, `label`.
 
 ## Repository structure
 
@@ -110,15 +113,13 @@ python -m pytest ai-service/tests ml/tests
 mvn -f spring-backend/pom.xml test
 ```
 
-## Responsible use and privacy
+## Responsible use
 
-- never commit raw comments, personal data, credentials, or access tokens;
-- redact URLs, email addresses, and phone numbers before training;
-- treat predictions as signals requiring human review;
-- evaluate errors across language, dialect, and class before any real deployment.
+- never commit raw comments, personal data, credentials or access tokens;
+- redact URLs, emails and phone numbers before training;
+- require human review for decisions;
+- evaluate errors across language, dialect and class before real deployment.
 
 ## Project context
 
-This public version is a cleaned continuation of an academic team project. **Chaima Menouar** worked on cloud integration and model training/evaluation and prepared this maintainable portfolio release. See [`CONTRIBUTORS.md`](CONTRIBUTORS.md) for attribution.
-
-No open-source license has been selected. All rights remain with the contributors unless a license is added later with their agreement.
+This public version is a cleaned continuation of an academic team project. **Chaima Menouar** worked on cloud integration and model training/evaluation and prepared this maintainable portfolio release. See [`CONTRIBUTORS.md`](CONTRIBUTORS.md).
